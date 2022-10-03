@@ -1,78 +1,96 @@
+let computerScore = 0;
+let playerScore = 0;
+
+const buttons = document.querySelectorAll("button");
+const div = document.querySelector("div");
+
+buttons.forEach(button => {
+  button.addEventListener("click", game)
+});
+
+const whoWon = document.createElement("p");
+div.appendChild(whoWon);
+
+const score = document.createElement("p");
+div.appendChild(score);
+
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "Reset game";
+resetBtn.style.display = "none";
+document.body.appendChild(resetBtn);
+
 function getComputedChoice() {
   // Generate pseudo-random number between 0 and 2
   const randomChoice = Math.floor(Math.random() * 3)
 
   switch (randomChoice) {
     case 0:
-      return "rock";
+      return "Rock";
     case 1:
-      return "paper";
+      return "Paper";
     case 2:
-      return "scissors";
+      return "Scissors";
   }
 }
 
 function playRound(playerSelection, computerSelection) {
-  playerSelection = playerSelection.toLowerCase();
-  computerSelection = computerSelection.toLowerCase();
+  const computerWonMsg = `Computer wins this round! ${computerSelection} beats ${playerSelection}`;
+  const playerWonMsg = `Player wins this round! ${playerSelection} beats ${computerSelection}`;
 
   if (playerSelection === computerSelection) {
+    whoWon.textContent = `It's a tie! You both choose ${playerSelection}`;
     return 0;
-  } else if (playerSelection === "rock") {
-    if (computerSelection === "paper") {
-      return -1;
-    } else if (computerSelection === "scissors") {
-      return 1;
-    }
-  } else if (playerSelection === "paper") {
-    if (computerSelection === "rock") {
-      return 1;
-    } else if (computerSelection === "scissors") {
-      return -1;
-    }
-  } else if (playerSelection === "scissors") {
-    if (computerSelection === "paper") {
-      return 1;
-    } else if (computerSelection === "rock") {
-      return -1;
-    }
+  } else if ((playerSelection === "Rock" && computerSelection === "Scissors") ||
+    (playerSelection === "Paper" && computerSelection === "Rock") ||
+    (playerSelection === "Scissors" && computerSelection === "Paper")) {
+    whoWon.textContent = playerWonMsg;
+    return 1;
+  } else {
+    whoWon.textContent = computerWonMsg;
+    return -1;
   }
 }
 
-function getUserInput() {
-  let userInput = prompt("Enter rock, paper or scissors").toLowerCase();
-
-  while (["rock", "paper", "scissors"].indexOf(userInput) == -1) {
-    userInput = prompt("You input is incorrect. Enter rock, paper or scissors").toLowerCase();
+function updateScore(winner) {
+  if (winner === 1) {
+    ++playerScore;
+  } else if (winner === -1) {
+    ++computerScore;
   }
-  return userInput;
+  score.textContent = `Computer: ${computerScore} - Player ${playerScore}`;
+}
+
+function resetGame() {
+  resetBtn.style.display = "inline";
+
+  resetBtn.addEventListener("click", () => {
+    computerScore = 0;
+    playerScore = 0;
+    whoWon.textContent = "";
+    score.textContent = "";
+    buttons.forEach(button => button.disabled = false);
+
+    resetBtn.style.display = "none";
+  })
 }
 
 function game() {
-  let playerScore = 0;
-  let computerScore = 0;
+  const playerSelection = this.value;
+  const computerSelection = getComputedChoice();
 
-  for (let i = 0; i < 5; i++) {
-    const computerSelection = getComputedChoice();
-    const playerSelection = getUserInput();
+  const winner = playRound(playerSelection, computerSelection);
+  updateScore(winner);
 
-    winner = playRound(playerSelection, computerSelection);
+  if (computerScore === 5 || playerScore === 5) {
+    buttons.forEach(button => button.disabled = true);
+    whoWon.style.fontWeight = 800;
 
-    if (winner == 1) {
-      ++playerScore;
-      alert("Player win this round!");
-    } else if (winner == -1) {
-      ++computerScore;
-      alert("Computer win this round!");
+    if (computerScore === 5) {
+      whoWon.textContent = "Computer win this game!";
     } else {
-      alert("It's a tie!");
+      whoWon.textContent = "Player win this game!";
     }
-  }
-  if (playerScore > computerScore) {
-    alert(`Player win this game with the score ${playerScore}:${computerScore}`)
-  } else if (playerScore < computerScore) {
-    alert(`Computer win this game with the score ${computerScore}:${playerScore}`);
-  } else {
-    alert("Tie in this game");
+
+    resetGame();
   }
 }
